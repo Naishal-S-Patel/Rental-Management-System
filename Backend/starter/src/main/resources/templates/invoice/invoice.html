@@ -1,0 +1,70 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Invoice</title>
+    <style type="text/css">
+        body { font-family: Helvetica, Arial, sans-serif; font-size: 12px; color: #1a1a1a; }
+        h1 { font-size: 20px; margin-bottom: 4px; }
+        .muted { color: #666666; }
+        table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+        th, td { border: 1px solid #cccccc; padding: 6px 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .totals td { border: none; padding: 2px 8px; }
+        .totals .label { text-align: right; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1 th:text="${orgName}">Rental Management System</h1>
+    <p class="muted">Invoice #<span th:text="${invoiceId}">0</span> - <span th:text="${invoiceType}">RENTAL</span></p>
+    <p class="muted">Issued: <span th:text="${issuedAt}">2026-01-01</span></p>
+
+    <p>
+        <strong>Billed to:</strong> <span th:text="${customerName}">Customer</span><br />
+        <span th:text="${customerEmail}">customer@example.com</span>
+    </p>
+
+    <p>
+        <strong>Order:</strong> <span th:text="${orderId}">order-id</span><br />
+        <strong>Fulfillment:</strong> <span th:text="${fulfillmentMethod}">STORE_PICKUP</span>
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Qty</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Unit Price</th>
+                <th>Line Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="line : ${lines}">
+                <td th:text="${line.productName}">Product</td>
+                <td th:text="${line.quantity}">1</td>
+                <td th:text="${line.startDate}">2026-01-01</td>
+                <td th:text="${line.endDate}">2026-01-02</td>
+                <td th:text="${line.unitPrice}">0.00</td>
+                <td th:text="${line.lineTotal}">0.00</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <table class="totals">
+        <tr>
+            <td class="label">Subtotal:</td>
+            <td th:text="${subtotalAmount}">0.00</td>
+        </tr>
+        <tr>
+            <td class="label">Security Deposit:</td>
+            <td th:text="${depositAmount}">0.00</td>
+        </tr>
+        <tr>
+            <td class="label">Total:</td>
+            <td th:text="${amount}">0.00</td>
+        </tr>
+    </table>
+</body>
+</html>

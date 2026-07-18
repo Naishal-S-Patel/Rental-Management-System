@@ -1,0 +1,12 @@
+package com.hackathon.starter.repository;
+
+import com.hackathon.starter.entity.ProductImage;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+import java.util.UUID;
+
+public interface ProductImageRepository extends JpaRepository<ProductImage, Long> {
+
+    List<ProductImage> findByProductIdOrderBySortOrderAsc(UUID productId);
+}

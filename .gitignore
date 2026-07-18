@@ -1,0 +1,8 @@
+node_modules/
+target/
+dist/
+*.class
+.DS_Store
+storage/
+*.db
+Frontend/frontend/node_modules/

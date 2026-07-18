@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Order confirmed</title></head>
+<body style="font-family: Arial, sans-serif; color: #1a1a1a;">
+    <div style="max-width: 480px; margin: 0 auto; padding: 24px;">
+        <h2>Hi <span th:text="${firstName}">there</span>,</h2>
+        <p>Your rental order has been confirmed by our team.</p>
+        <p>Order: <strong th:text="${orderId}">order-id</strong></p>
+        <p>Total amount due (rental + security deposit): <strong th:text="${totalAmount}">0.00</strong></p>
+        <p>You can now proceed to payment from your account.</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Deposit settled</title></head>
+<body style="font-family: Arial, sans-serif; color: #1a1a1a;">
+    <div style="max-width: 480px; margin: 0 auto; padding: 24px;">
+        <h2>Hi <span th:text="${firstName}">there</span>,</h2>
+        <p>Your security deposit for order <strong th:text="${orderId}">order-id</strong> has been settled.</p>
+        <p th:if="${penaltyAmount != null and penaltyAmount.signum() > 0}">
+            A late-return penalty of <strong th:text="${penaltyAmount}">0.00</strong> was applied.
+        </p>
+        <p>Refunded to your original payment method: <strong th:text="${refundAmount}">0.00</strong>.</p>
+        <p>Any late-fee invoice is available for download from your account.</p>
+    </div>
+</body>
+</html>
