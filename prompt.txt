@@ -1,8 +1,0 @@
-We would like to implement the backend right now . 
-We have already created PRD , system design and db schema md files.
-You have context to those files. Start implementing the backend now .
-Make sure in security related things we aint using oauth2 and storage service so make sure you dont do
-any changes on it.
-Make sure u maintain correct db schema and we are using myqsql.
-
-Generate backend in these folder already created D:\OneDrive - pdpu.ac.in\Desktop\Hackathon_Template\Backend\starter
