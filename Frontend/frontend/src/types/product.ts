@@ -1,9 +1,9 @@
-// Product & Variant types
+// Product & Variant types — aligned to backend ProductResponse / ProductVariantResponse DTOs
 
 export interface AttributeValueResponse {
-  id: string
+  id: number // backend Long
   value: string
-  attributeTypeId: string
+  attributeTypeId: number
   attributeTypeName: string
 }
 
@@ -23,7 +23,7 @@ export interface ProductVariantResponse {
 }
 
 export interface ProductImageResponse {
-  id: string
+  id: number
   fileId: string
   url: string
 }
@@ -40,7 +40,33 @@ export interface ProductResponse {
   storeName?: string
   images: ProductImageResponse[]
   variants: ProductVariantResponse[]
+  ratingAverage?: number
+  reviewCount?: number
   createdAt: string
+
+  // ── Dynamic pricing enrichment (optional — null when feature off or Groq failed) ──
+  /** Adjusted price to show. Equals basePrice when feature is off or Groq failed. */
+  dynamicPrice?: number | null
+  /** Product of all active factor multipliers. 1.0 when feature off. */
+  combinedMultiplier?: number | null
+  /** dynamicPrice - basePrice. 0 when no adjustment. */
+  priceAdjustment?: number | null
+  /** Short badge string for top 1-2 driving factors, e.g. "🎉 Raksha Bandhan in 6 days · Monsoon". Null if no meaningful adjustment. */
+  topDriverBadge?: string | null
+  /** Full demand explanation for tooltip/popover. */
+  demandNote?: string | null
+  // Per-factor multipliers for breakdown popover
+  seasonalMultiplier?: number | null
+  festivalMultiplier?: number | null
+  weekendMultiplier?: number | null
+  durationMultiplier?: number | null
+  weatherMultiplier?: number | null
+  categoryTrendMultiplier?: number | null
+  scarcityMultiplier?: number | null
+  // Contextual strings
+  currentSeason?: string | null
+  nearestFestival?: string | null
+  daysToFestival?: number | null
 }
 
 export interface PagedResponse<T> {

@@ -2,7 +2,7 @@ import { api } from '@/lib/api'
 import type { MessageResponse, Role } from '@/types/auth'
 
 // Mirrors SecurityConfig's /api/role1..4/** and /api/admin/** rules + RoleController/AdminController.
-const rolePingPaths: Record<Role, string> = {
+const rolePingPaths: Record<any, string> = {
   ADMIN: '/api/admin/ping',
   ROLE1: '/api/role1/ping',
   ROLE2: '/api/role2/ping',

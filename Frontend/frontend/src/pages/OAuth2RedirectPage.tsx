@@ -36,7 +36,7 @@ export function OAuth2RedirectPage() {
   return (
     <div className="auth-page">
       <div className="auth-card" style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '24px' }}>RentHub</div>
+        <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary)', marginBottom: '24px', letterSpacing: '-0.03em' }}>RentLo</div>
         {error ? (
           <div>
             <div className="alert alert-danger" style={{ marginBottom: 16 }}>{error}</div>

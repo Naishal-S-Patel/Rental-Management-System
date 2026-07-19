@@ -25,7 +25,7 @@ export function VerifyEmailPage() {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '24px' }}>RentHub</div>
+        <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary)', marginBottom: '24px', letterSpacing: '-0.03em' }}>RentLo</div>
         <h1 className="auth-title" style={{ fontSize: '1.125rem' }}>Email Verification</h1>
 
         {status === 'verifying' && (

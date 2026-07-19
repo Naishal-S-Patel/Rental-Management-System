@@ -15,8 +15,9 @@ export const userApi = {
   uploadPhoto: (file: File) => {
     const form = new FormData()
     form.append('file', file)
-    return api.post<UserResponse>('/api/users/me/photo', form, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+    return api.put<UserResponse>('/api/users/me/photo', form)
   },
+
+  listCustomers: () =>
+    api.get<UserResponse[]>('/api/users/customers'),
 }

@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { AppShell } from '@/components/AppShell'
+import { ControlPanel } from '@/components/ControlPanel'
 import { productApi } from '@/api/productApi'
 import { Modal } from '@/components/Modal'
 import { getErrorMessage } from '@/lib/errorMessage'
-import type { ProductResponse, ProductVariantResponse, AttributeTypeResponse } from '@/types/product'
+import type { ProductResponse, AttributeTypeResponse } from '@/types/product'
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
 
@@ -95,7 +96,7 @@ export function AdminProductFormPage() {
       await productApi.createVariant(product.id, {
         sku: variantSku,
         totalQuantity: Number(variantQty),
-        attributeValueIds: Object.values(variantAttrs),
+        attributeValueIds: Object.values(variantAttrs).filter((val) => !!val),
       })
       const { data } = await productApi.get(product.id)
       setProduct(data)
@@ -125,30 +126,30 @@ export function AdminProductFormPage() {
 
   return (
     <AppShell requiredRole="ADMIN">
-      <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginBottom: 16 }}>
-        <Link to="/admin/products">Products</Link> / {isEdit ? product?.name ?? 'Edit' : 'New Product'}
-      </div>
+      <ControlPanel
+        breadcrumbs={[
+          { label: 'Products', to: '/admin/products' },
+          { label: isEdit ? product?.name ?? 'Edit' : 'New Product' },
+        ]}
+        actions={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem' }}>
+              <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} /> Active
+            </label>
+          </div>
+        }
+      />
 
-      <div className="page-header">
-        <h1 className="page-title">{isEdit ? 'Edit Product' : 'New Product'}</h1>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.875rem' }}>
-            <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} />
-            Active
-          </label>
+      <div className="o-content">
+        {/* Tabs */}
+        <div className="o-notebook-tabs mt-3">
+          {(['basic', 'images', 'variants'] as const).map((t) => (
+            <button key={t} className={`o-notebook-tab ${tab === t ? 'active' : ''}`} onClick={() => setTab(t)}>
+              {t === 'basic' ? 'Basic Info' : t.charAt(0).toUpperCase() + t.slice(1)}
+              {t === 'variants' && !product && <span className="badge badge-neutral" style={{ marginLeft: 6, fontSize: '0.7rem' }}>Save first</span>}
+            </button>
+          ))}
         </div>
-      </div>
-
-      {/* Tabs */}
-      <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', marginBottom: 20 }}>
-        {(['basic', 'images', 'variants'] as const).map((t) => (
-          <button key={t} onClick={() => setTab(t)}
-            style={{ padding: '8px 16px', border: 'none', borderBottom: `2px solid ${tab === t ? 'var(--primary)' : 'transparent'}`, background: 'none', color: tab === t ? 'var(--primary)' : 'var(--text-secondary)', fontWeight: tab === t ? 600 : 400, cursor: 'pointer', fontSize: '0.875rem', textTransform: 'capitalize' }}>
-            {t === 'basic' ? 'Basic Info' : t.charAt(0).toUpperCase() + t.slice(1)}
-            {t === 'variants' && !product && <span className="badge badge-neutral" style={{ marginLeft: 6 }}>Save first</span>}
-          </button>
-        ))}
-      </div>
 
       {/* Basic Tab */}
       {tab === 'basic' && (
@@ -194,21 +195,21 @@ export function AdminProductFormPage() {
             {product && (
               <>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 16 }}>
-                  {product.images.map((img) => {
-                    const src = img.url || `${BASE_URL}/api/files/${img.fileId}`
+                  {(product.images || []).map((img) => {
+                    const src = img.url ? (img.url.startsWith('http') ? img.url : `${BASE_URL}${img.url}`) : `${BASE_URL}/api/files/${img.fileId}`
                     return (
                       <div key={img.id} style={{ width: 120, height: 90, border: '1px solid var(--border)', overflow: 'hidden', background: 'var(--bg-subtle)' }}>
                         <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       </div>
                     )
                   })}
-                  {product.images.length === 0 && (
+                  {(product.images || []).length === 0 && (
                     <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>No images yet.</div>
                   )}
                 </div>
                 <input ref={imgInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => { const f = e.target.files?.[0]; if (f) void handleImageUpload(f) }} />
                 <button className="btn btn-secondary" disabled={imgUploading} onClick={() => imgInputRef.current?.click()}>
-                  <i className="fa-solid fa-upload"></i> {imgUploading ? 'Uploading…' : 'Upload Image'}
+                  {imgUploading ? 'Uploading…' : '↑ Upload Image'}
                 </button>
               </>
             )}
@@ -222,9 +223,7 @@ export function AdminProductFormPage() {
           <div className="card-header">
             <span className="card-title">Variants</span>
             {product && (
-              <button className="btn btn-secondary btn-sm" onClick={() => setVariantModal(true)}>
-                <i className="fa-solid fa-plus"></i> Add Variant
-              </button>
+              <button className="btn btn-secondary btn-sm" onClick={() => setVariantModal(true)}>+ Variant</button>
             )}
           </div>
           <div className="card-body">
@@ -248,9 +247,7 @@ export function AdminProductFormPage() {
                         <td>{v.totalQuantity}</td>
                         <td>{v.availableQuantity ?? v.totalQuantity}</td>
                         <td>
-                          <button className="btn btn-danger btn-sm" onClick={() => void handleDeleteVariant(v.id)}>
-                            <i className="fa-solid fa-trash"></i>
-                          </button>
+                          <button className="btn btn-danger btn-sm" onClick={() => void handleDeleteVariant(v.id)}>×</button>
                         </td>
                       </tr>
                     ))}
@@ -293,6 +290,7 @@ export function AdminProductFormPage() {
           ))}
         </Modal>
       )}
+      </div>
     </AppShell>
   )
 }

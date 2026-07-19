@@ -2,7 +2,7 @@ import { api } from '@/lib/api'
 import type { PagedResponse, ProductResponse, ProductRequest, ProductVariantRequest, ProductVariantResponse, AttributeTypeResponse, AttributeTypeRequest, AttributeValueRequest, AttributeValueResponse } from '@/types/product'
 
 export const productApi = {
-  list: (params?: { category?: string; search?: string; page?: number; size?: number }) =>
+  list: (params?: { category?: string; search?: string; mine?: boolean; adminId?: string; sort?: string; page?: number; size?: number }) =>
     api.get<PagedResponse<ProductResponse>>('/api/products', { params: { ...params, size: params?.size ?? 12 } }),
 
   get: (id: string) =>
@@ -23,9 +23,7 @@ export const productApi = {
   uploadImage: (id: string, file: File) => {
     const form = new FormData()
     form.append('file', file)
-    return api.post<ProductResponse>(`/api/products/${id}/images`, form, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+    return api.post<ProductResponse>(`/api/products/${id}/images`, form)
   },
 
   createVariant: (productId: string, body: ProductVariantRequest) =>

@@ -4,44 +4,39 @@ export type QuotationStatus = 'DRAFT' | 'SENT' | 'CONFIRMED' | 'REJECTED' | 'EXP
 
 export interface QuotationLineResponse {
   id: string
-  productId: string
+  productVariantId: string
   productName: string
-  variantId?: string
-  variantSku?: string
   quantity: number
+  startDate: string
+  endDate: string
   unitPrice: number
-  durationUnit: string
-  durationValue: number
-  amount: number
+  lineTotal: number
 }
 
 export interface QuotationResponse {
   id: string
-  quotationNumber: string
-  status: QuotationStatus
   customerId: string
   customerName: string
-  customerEmail: string
-  templateId?: string
-  templateName?: string
+  customerEmail?: string
+  quotationTemplateId?: number
+  status: QuotationStatus
   validUntil: string
   lines: QuotationLineResponse[]
-  total: number
+  subtotalAmount: number
+  orderId?: string
   createdAt: string
 }
 
 export interface QuotationLineRequest {
-  productId: string
-  variantId?: string
+  productVariantId: string
   quantity: number
-  unitPrice: number
-  durationUnit: string
-  durationValue: number
+  startDate: string
+  endDate: string
 }
 
 export interface QuotationRequest {
   customerId: string
-  quotationTemplateId?: string
+  quotationTemplateId?: number
   validUntil: string
   lines: QuotationLineRequest[]
 }

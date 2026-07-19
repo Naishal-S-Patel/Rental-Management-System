@@ -1,5 +1,4 @@
 import { useState, type FormEvent } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Link } from 'react-router-dom'
 import { authApi } from '@/api/authApi'
 import { getErrorMessage } from '@/lib/errorMessage'
@@ -28,7 +27,7 @@ export function ForgotPasswordPage() {
     <div className="auth-page">
       <div className="auth-card">
         <div style={{ marginBottom: '24px' }}>
-          <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>RentHub</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary)', marginBottom: '4px', letterSpacing: '-0.03em' }}>RentLo</div>
           <h1 className="auth-title" style={{ fontSize: '1.125rem', marginBottom: 0 }}>Reset your password</h1>
         </div>
 

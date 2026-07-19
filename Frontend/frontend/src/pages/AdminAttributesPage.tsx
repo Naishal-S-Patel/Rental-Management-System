@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { AppShell } from '@/components/AppShell'
+import { ControlPanel } from '@/components/ControlPanel'
 import { productApi } from '@/api/productApi'
 import { Modal } from '@/components/Modal'
 import { getErrorMessage } from '@/lib/errorMessage'
@@ -9,7 +10,6 @@ import type { AttributeTypeResponse } from '@/types/product'
 export function AdminAttributesPage() {
   const [attrs, setAttrs] = useState<AttributeTypeResponse[]>([])
   const [loading, setLoading] = useState(true)
-  const [expanded, setExpanded] = useState<string | null>(null)
 
   // Create type
   const [typeModal, setTypeModal] = useState(false)
@@ -63,26 +63,21 @@ export function AdminAttributesPage() {
 
   return (
     <AppShell requiredRole="ADMIN">
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Attributes</h1>
-          <div className="page-subtitle">Manage attribute types and values for your products</div>
-        </div>
-        <button className="btn btn-primary" onClick={() => setTypeModal(true)}>
-          <i className="fa-solid fa-plus"></i> New Attribute Type
-        </button>
-      </div>
+      <ControlPanel
+        breadcrumbs={[{ label: 'Configuration', to: '/admin/settings' }, { label: 'Attributes' }]}
+        actions={<button className="btn btn-primary" onClick={() => setTypeModal(true)}>+ New Type</button>}
+      />
 
-      {loading && <div className="loading-overlay"><span className="spinner"></span></div>}
+      <div className="o-content">
+        {loading && <div className="loading-overlay"><span className="spinner"></span></div>}
 
-      {!loading && attrs.length === 0 && (
-        <div className="empty-state">
-          <i className="fa-solid fa-sliders"></i>
-          <p>No attribute types yet. Create one to add variants to your products.</p>
-        </div>
-      )}
+        {!loading && attrs.length === 0 && (
+          <div className="empty-state mt-3">
+            <p>No attribute types yet. Create one to add variants to your products.</p>
+          </div>
+        )}
 
-      {!loading && attrs.length > 0 && (
+        {!loading && attrs.length > 0 && (
         <div className="card">
           <div className="table-wrap" style={{ border: 'none' }}>
             <table>
@@ -107,7 +102,7 @@ export function AdminAttributesPage() {
                     </td>
                     <td>
                       <button className="btn btn-secondary btn-sm" onClick={() => { setSelectedTypeId(attr.id); setValueModal(true) }}>
-                        <i className="fa-solid fa-plus"></i> Add Value
+                        + Value
                       </button>
                     </td>
                   </tr>
@@ -153,6 +148,7 @@ export function AdminAttributesPage() {
           </div>
         </Modal>
       )}
+      </div>
     </AppShell>
   )
 }

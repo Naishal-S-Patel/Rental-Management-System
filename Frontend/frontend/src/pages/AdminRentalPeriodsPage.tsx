@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { AppShell } from '@/components/AppShell'
+import { ControlPanel } from '@/components/ControlPanel'
 import { rentalPeriodApi } from '@/api/pricelistApi'
 import { Modal } from '@/components/Modal'
 import { getErrorMessage } from '@/lib/errorMessage'
@@ -63,33 +64,29 @@ export function AdminRentalPeriodsPage() {
 
   return (
     <AppShell requiredRole="ADMIN">
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Rental Periods</h1>
-          <div className="page-subtitle">Named period templates for your products</div>
-        </div>
-        <button className="btn btn-primary" onClick={openNew}>
-          <i className="fa-solid fa-plus"></i> New Period
-        </button>
-      </div>
+      <ControlPanel
+        breadcrumbs={[{ label: 'Configuration', to: '/admin/settings' }, { label: 'Rental Periods' }]}
+        actions={
+          <button className="btn btn-primary" onClick={openNew}>+ New Period</button>
+        }
+      />
 
-      {loading && <div className="loading-overlay"><span className="spinner"></span></div>}
+      <div className="o-content">
+        {loading && <div className="loading-overlay"><span className="spinner"></span></div>}
 
-      {!loading && periods.length === 0 && (
-        <div className="empty-state">
-          <i className="fa-solid fa-clock"></i>
-          <p>No rental periods yet. Add templates like "Weekend", "1 Week", etc.</p>
-        </div>
-      )}
+        {!loading && periods.length === 0 && (
+          <div className="empty-state mt-3">
+            <p>No rental periods yet. Add templates like "Weekend", "1 Week", etc.</p>
+          </div>
+        )}
 
-      {!loading && periods.length > 0 && (
-        <div className="card">
-          <div className="table-wrap" style={{ border: 'none' }}>
+        {!loading && periods.length > 0 && (
+          <div className="table-wrap mt-3">
             <table>
               <thead>
                 <tr>
                   <th>Name</th>
-                  <th>Duration</th>
+                  <th className="text-right">Duration</th>
                   <th>Unit</th>
                   <th></th>
                 </tr>
@@ -98,12 +95,12 @@ export function AdminRentalPeriodsPage() {
                 {periods.map((p) => (
                   <tr key={p.id}>
                     <td style={{ fontWeight: 600 }}>{p.name}</td>
-                    <td>{p.durationValue}</td>
+                    <td className="text-right">{p.durationValue}</td>
                     <td><span className="badge badge-neutral">{p.durationUnit}</span></td>
                     <td>
                       <div style={{ display: 'flex', gap: 6 }}>
-                        <button className="btn btn-secondary btn-sm" onClick={() => openEdit(p)}><i className="fa-solid fa-pen"></i></button>
-                        <button className="btn btn-danger btn-sm" onClick={() => void handleDelete(p.id)}><i className="fa-solid fa-trash"></i></button>
+                        <button className="btn btn-secondary btn-sm" onClick={() => openEdit(p)}>Edit</button>
+                        <button className="btn btn-danger btn-sm" onClick={() => void handleDelete(p.id)}>×</button>
                       </div>
                     </td>
                   </tr>
@@ -111,38 +108,38 @@ export function AdminRentalPeriodsPage() {
               </tbody>
             </table>
           </div>
-        </div>
-      )}
+        )}
 
-      {modal && (
-        <Modal title={modal === 'edit' ? 'Edit Rental Period' : 'New Rental Period'} onClose={() => setModal(null)}
-          footer={
-            <>
-              <button className="btn btn-secondary" onClick={() => setModal(null)}>Cancel</button>
-              <button className="btn btn-primary" disabled={saving || !name} onClick={() => void handleSave()}>
-                {saving ? 'Saving…' : 'Save'}
-              </button>
-            </>
-          }
-        >
-          <div className="form-group">
-            <label className="form-label">Name <span style={{ color: 'var(--status-danger)' }}>*</span></label>
-            <input className="form-input" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Weekend, 1 Week" />
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        {modal && (
+          <Modal title={modal === 'edit' ? 'Edit Rental Period' : 'New Rental Period'} onClose={() => setModal(null)}
+            footer={
+              <>
+                <button className="btn btn-secondary" onClick={() => setModal(null)}>Cancel</button>
+                <button className="btn btn-primary" disabled={saving || !name} onClick={() => void handleSave()}>
+                  {saving ? 'Saving…' : 'Save'}
+                </button>
+              </>
+            }
+          >
             <div className="form-group">
-              <label className="form-label">Duration</label>
-              <input type="number" className="form-input" value={durationValue} onChange={(e) => setDurationValue(e.target.value)} min="1" />
+              <label className="form-label">Name <span style={{ color: 'var(--status-danger)' }}>*</span></label>
+              <input className="form-input" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Weekend, 1 Week" />
             </div>
-            <div className="form-group">
-              <label className="form-label">Unit</label>
-              <select className="form-select" value={durationUnit} onChange={(e) => setDurationUnit(e.target.value as DurationUnit)}>
-                {DURATION_UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
-              </select>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div className="form-group">
+                <label className="form-label">Duration</label>
+                <input type="number" className="form-input" value={durationValue} onChange={(e) => setDurationValue(e.target.value)} min="1" />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Unit</label>
+                <select className="form-select" value={durationUnit} onChange={(e) => setDurationUnit(e.target.value as DurationUnit)}>
+                  {DURATION_UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+                </select>
+              </div>
             </div>
-          </div>
-        </Modal>
-      )}
+          </Modal>
+        )}
+      </div>
     </AppShell>
   )
 }

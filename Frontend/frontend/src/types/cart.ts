@@ -1,29 +1,36 @@
-// Cart types
+// Cart types — aligned to backend CartResponse / CartItemResponse DTOs
+
+export interface CartItemVariantAttribute {
+  name: string
+  value: string
+}
 
 export interface CartItemResponse {
-  id: string
+  id: number // backend Long
   productId: string
   productName: string
   productCategory: string
-  variantId?: string
+  variantId: string
   variantSku?: string
-  variantAttributes?: { name: string; value: string }[]
+  variantAttributes: CartItemVariantAttribute[]
   adminId: string
   storeName?: string
   quantity: number
   startDate: string
   endDate: string
-  rentalPeriodId?: string
+  rentalPeriodId?: number
   rentalPeriodName?: string
   unitPrice: number
-  amount: number
+  lineTotal: number
   imageUrl?: string
 }
 
 export interface CartResponse {
   id: string
   items: CartItemResponse[]
-  total: number
+  subtotalAmount: number
+  depositAmount: number
+  totalAmount: number
 }
 
 export interface CartItemRequest {
@@ -32,5 +39,5 @@ export interface CartItemRequest {
   quantity: number
   startDate: string
   endDate: string
-  rentalPeriodId?: string
+  rentalPeriodId?: number
 }

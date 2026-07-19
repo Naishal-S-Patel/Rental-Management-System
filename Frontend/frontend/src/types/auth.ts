@@ -18,6 +18,7 @@ export interface UserResponse {
   authProvider: AuthProvider
   verified: boolean
   profilePhotoUrl?: string
+  profileImageFileId?: string
   storeName?: string
   createdAt: string
 }

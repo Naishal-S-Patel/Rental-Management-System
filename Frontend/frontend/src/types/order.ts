@@ -11,42 +11,38 @@ export type OrderStatus =
   | 'CLOSED'
   | 'CANCELLED'
 
-export type FulfillmentMethod = 'STANDARD_DELIVERY' | 'PICKUP_FROM_STORE'
+export type FulfillmentMethod = 'DELIVERY' | 'STORE_PICKUP'
 
 export interface OrderLineResponse {
   id: string
-  productId: string
+  productVariantId: string
   productName: string
-  variantId?: string
-  variantSku?: string
   quantity: number
-  unitPrice: number
-  durationUnit: string
-  durationValue: number
   startDate: string
   endDate: string
-  amount: number
+  unitPrice: number
+  lineTotal: number
 }
 
 export interface OrderResponse {
   id: string
-  orderNumber: string
+  customerId: string
+  customerName: string
+  customerEmail?: string
+  owningAdminId: string
+  storeName?: string
   status: OrderStatus
   fulfillmentMethod: FulfillmentMethod
   deliveryAddressId?: string
   deliveryAddress?: string
-  customerId: string
-  customerName: string
-  customerEmail: string
-  adminId: string
-  storeName?: string
   lines: OrderLineResponse[]
-  subtotal: number
-  deliveryCharge: number
-  total: number
+  subtotalAmount: number
   depositAmount: number
+  totalAmount: number
+  confirmedBy?: string
+  confirmedAt?: string
   createdAt: string
-  updatedAt: string
+  updatedAt?: string
 }
 
 export interface CheckoutRequest {
@@ -56,9 +52,9 @@ export interface CheckoutRequest {
 
 export interface PaymentInitiateResponse {
   razorpayOrderId: string
+  razorpayKeyId: string
   amount: number
   currency: string
-  keyId: string
 }
 
 export interface PaymentResponse {
@@ -88,11 +84,11 @@ export interface DepositTransactionResponse {
 
 export interface InvoiceResponse {
   id: string
-  invoiceNumber: string
+  invoiceNumber?: string
   type: 'RENTAL' | 'LATE_FEE'
   amount: number
   fileId?: string
-  createdAt: string
+  issuedAt: string
 }
 
 export interface DamageReportResponse {
@@ -106,8 +102,8 @@ export interface DamageReportResponse {
 export interface PickupResponse {
   id: string
   orderId: string
-  orderNumber: string
-  customerName: string
+  orderNumber?: string
+  customerName?: string
   scheduledDate: string
   confirmedAt?: string
   checklistNotes?: string
@@ -116,8 +112,8 @@ export interface PickupResponse {
 export interface ReturnResponse {
   id: string
   orderId: string
-  orderNumber: string
-  customerName: string
+  orderNumber?: string
+  customerName?: string
   conditionNotes?: string
   damageReported: boolean
   missingAccessories: boolean

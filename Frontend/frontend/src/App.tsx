@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Route, Routes } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from '@/context/AuthContext'
 
@@ -17,6 +17,7 @@ import { CartPage } from '@/pages/CartPage'
 import { CheckoutPage } from '@/pages/CheckoutPage'
 import { CustomerOrdersPage } from '@/pages/CustomerOrdersPage'
 import { CustomerOrderDetailPage } from '@/pages/CustomerOrderDetailPage'
+import { HomePage } from '@/pages/HomePage'
 import { AccountPage } from '@/pages/AccountPage'
 
 // Admin pages
@@ -51,7 +52,7 @@ export default function App() {
       />
       <Routes>
         {/* Public — unauthenticated */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/verify-email" element={<VerifyEmailPage />} />

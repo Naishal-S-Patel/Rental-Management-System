@@ -1,29 +1,35 @@
 import { useState, useEffect, useRef } from 'react'
 import toast from 'react-hot-toast'
 import { AppShell } from '@/components/AppShell'
+import { ControlPanel } from '@/components/ControlPanel'
 import { useAuth } from '@/hooks/useAuth'
 import { addressApi } from '@/api/addressApi'
 import { userApi } from '@/api/userApi'
 import { getErrorMessage } from '@/lib/errorMessage'
 import type { AddressResponse, AddressRequest } from '@/types/address'
-import type { UserResponse } from '@/types/auth'
 import { Modal } from '@/components/Modal'
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
 
 export function AccountPage() {
   const { user, refreshCurrentUser } = useAuth()
+  const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'addresses'>('profile')
+  
   const [addresses, setAddresses] = useState<AddressResponse[]>([])
   const [loadingAddr, setLoadingAddr] = useState(true)
   const [editAddr, setEditAddr] = useState<AddressResponse | null>(null)
   const [showNewAddr, setShowNewAddr] = useState(false)
-  const [addrForm, setAddrForm] = useState<AddressRequest>({ street: '', city: '', state: '', zipCode: '', country: 'India' })
+  const [addrForm, setAddrForm] = useState<AddressRequest>({ line1: '', city: '', state: '', postalCode: '', country: 'India' })
   const [savingAddr, setSavingAddr] = useState(false)
 
   // Profile form
   const [firstName, setFirstName] = useState(user?.firstName ?? '')
   const [lastName, setLastName] = useState(user?.lastName ?? '')
   const [savingProfile, setSavingProfile] = useState(false)
+
+  // Photo Upload States
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
 
   // Password form
   const [currentPw, setCurrentPw] = useState('')
@@ -41,7 +47,10 @@ export function AccountPage() {
   }, [])
 
   useEffect(() => {
-    if (user) { setFirstName(user.firstName); setLastName(user.lastName) }
+    if (user) {
+      setFirstName(user.firstName)
+      setLastName(user.lastName)
+    }
   }, [user])
 
   const handleSaveProfile = async () => {
@@ -58,22 +67,42 @@ export function AccountPage() {
   }
 
   const handlePhotoUpload = async (file: File) => {
+    // Immediate preview for snappy responsive feel
+    const localUrl = URL.createObjectURL(file)
+    setPhotoPreview(localUrl)
+    setUploadingPhoto(true)
     try {
       await userApi.uploadPhoto(file)
       await refreshCurrentUser()
-      toast.success('Photo updated.')
+      toast.success('Photo updated successfully.')
     } catch (err) {
       toast.error(getErrorMessage(err, 'Could not upload photo.'))
+      setPhotoPreview(null) // Revert preview on error
+    } finally {
+      setUploadingPhoto(false)
     }
   }
 
   const handleChangePassword = async () => {
-    if (newPw !== confirmPw) { toast.error('Passwords do not match.'); return }
+    if (!currentPw || !newPw || !confirmPw) {
+      toast.error('All fields are required.')
+      return
+    }
+    if (newPw !== confirmPw) {
+      toast.error('Passwords do not match.')
+      return
+    }
+    if (newPw.length < 8) {
+      toast.error('New password must be at least 8 characters.')
+      return
+    }
     setChangingPw(true)
     try {
       await userApi.changePassword({ currentPassword: currentPw, newPassword: newPw })
-      toast.success('Password changed. Please log in again on other devices.')
-      setCurrentPw(''); setNewPw(''); setConfirmPw('')
+      toast.success('Password changed successfully.')
+      setCurrentPw('')
+      setNewPw('')
+      setConfirmPw('')
     } catch (err) {
       toast.error(getErrorMessage(err, 'Could not change password.'))
     } finally {
@@ -83,13 +112,13 @@ export function AccountPage() {
 
   const openNewAddr = () => {
     setEditAddr(null)
-    setAddrForm({ street: '', city: '', state: '', zipCode: '', country: 'India' })
+    setAddrForm({ line1: '', city: '', state: '', postalCode: '', country: 'India' })
     setShowNewAddr(true)
   }
 
   const openEditAddr = (addr: AddressResponse) => {
     setEditAddr(addr)
-    setAddrForm({ street: addr.street, city: addr.city, state: addr.state, zipCode: addr.zipCode, country: addr.country, label: addr.label })
+    setAddrForm({ line1: addr.line1, city: addr.city, state: addr.state, postalCode: addr.postalCode, country: addr.country, label: addr.label })
     setShowNewAddr(true)
   }
 
@@ -113,6 +142,7 @@ export function AccountPage() {
   }
 
   const handleDeleteAddr = async (id: string) => {
+    if (!confirm('Delete this address?')) return
     try {
       await addressApi.remove(id)
       setAddresses((prev) => prev.filter((a) => a.id !== id))
@@ -124,7 +154,7 @@ export function AccountPage() {
 
   const handleSetDefault = async (id: string) => {
     try {
-      const { data } = await addressApi.setDefault(id)
+      await addressApi.setDefault(id)
       setAddresses((prev) => prev.map((a) => ({ ...a, isDefault: a.id === id })))
       toast.success('Default address updated.')
     } catch (err) {
@@ -132,109 +162,280 @@ export function AccountPage() {
     }
   }
 
+  // Fallback avatar generator
+  const initials = ((user?.firstName ?? '')[0] + (user?.lastName ?? '')[0]).toUpperCase() || '👤'
+
   return (
     <AppShell requiredRole="CUSTOMER">
-      <div className="page-header">
-        <h1 className="page-title">Account</h1>
-      </div>
+      <ControlPanel breadcrumbs={[{ label: 'Account Settings' }]} />
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', alignItems: 'flex-start' }}>
-        {/* Profile */}
-        <div className="card">
-          <div className="card-header"><span className="card-title">Profile</span></div>
-          <div className="card-body">
-            {/* Photo */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
-              <div style={{ width: 64, height: 64, border: '1px solid var(--border)', background: 'var(--bg-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                {user?.profilePhotoUrl
-                  ? <img src={`${BASE_URL}/api/files/${user.profilePhotoUrl}`} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : <i className="fa-solid fa-user" style={{ fontSize: '2rem', color: 'var(--text-muted)' }}></i>
-                }
-              </div>
-              <div>
-                <input ref={photoInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => { const f = e.target.files?.[0]; if (f) void handlePhotoUpload(f) }} />
-                <button className="btn btn-secondary btn-sm" onClick={() => photoInputRef.current?.click()}>
-                  <i className="fa-solid fa-upload"></i> Change photo
+      <div className="o-content" style={{ marginTop: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: '32px', alignItems: 'flex-start' }}>
+          
+          {/* Left Setting Nav Split Layout (Deliberate Hierarchy) */}
+          <aside style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 4,
+            background: '#fff',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius)',
+            padding: '12px',
+            boxShadow: 'var(--shadow-sm)'
+          }}>
+            {[
+              { id: 'profile', label: '👤 Profile Details' },
+              { id: 'security', label: '🔒 Security & Password' },
+              { id: 'addresses', label: '📍 Saved Addresses' }
+            ].map((tab) => {
+              const isSel = activeTab === tab.id
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as typeof activeTab)}
+                  style={{
+                    display: 'block',
+                    width: '100%',
+                    textAlign: 'left',
+                    padding: '10px 14px',
+                    border: 'none',
+                    borderRadius: '6px',
+                    background: isSel ? 'var(--primary-light)' : 'transparent',
+                    color: isSel ? 'var(--primary)' : 'var(--text-secondary)',
+                    fontWeight: isSel ? 700 : 500,
+                    cursor: 'pointer',
+                    fontSize: '0.85rem',
+                    transition: 'all 0.12s'
+                  }}
+                >
+                  {tab.label}
+                </button>
+              )
+            })}
+          </aside>
+
+          {/* Right Content Pane */}
+          <div style={{ minWidth: 0 }}>
+            
+            {/* Tab: Profile Details */}
+            {activeTab === 'profile' && (
+              <div className="shadow-tinted" style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 24 }}>
+                <h2 style={{ fontFamily: 'Sora, sans-serif', fontSize: '1.4rem', fontWeight: 800, marginBottom: 20 }}>
+                  Profile Information
+                </h2>
+                
+                {/* Photo Upload with live preview & crop spinner state */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 24 }}>
+                  <div style={{
+                    width: 72,
+                    height: 72,
+                    borderRadius: '50%',
+                    border: '2px solid var(--primary-light)',
+                    background: 'var(--primary-light)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                    position: 'relative',
+                    boxShadow: 'var(--shadow-sm)'
+                  }}>
+                    {uploadingPhoto && (
+                      <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        backgroundColor: 'rgba(255,255,255,0.7)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 10
+                      }}>
+                        <span className="spinner" style={{ width: 20, height: 20 }}></span>
+                      </div>
+                    )}
+                    {photoPreview ? (
+                      <img src={photoPreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (user?.profileImageFileId || user?.profilePhotoUrl) ? (
+                      <img src={`${BASE_URL}/api/files/${user.profileImageFileId || user.profilePhotoUrl}`} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary)' }}>{initials}</span>
+                    )}
+                  </div>
+
+                  <div>
+                    <input
+                      ref={photoInputRef}
+                      type="file"
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={(e) => { const f = e.target.files?.[0]; if (f) void handlePhotoUpload(f) }}
+                    />
+                    <button
+                      className="btn btn-secondary"
+                      style={{ padding: '8px 16px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}
+                      onClick={() => photoInputRef.current?.click()}
+                    >
+                      Choose Profile Photo
+                    </button>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>JPG, PNG or GIF. Max size 2MB.</div>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600 }}>First Name</label>
+                  <input className="form-input" style={{ borderRadius: '6px' }} value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600 }}>Last Name</label>
+                  <input className="form-input" style={{ borderRadius: '6px' }} value={lastName} onChange={(e) => setLastName(e.target.value)} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600 }}>Email Address</label>
+                  <input className="form-input" style={{ borderRadius: '6px', background: 'var(--bg-subtle)', color: 'var(--text-muted)' }} value={user?.email ?? ''} disabled />
+                  <span className="form-hint">Your email address is managed securely and cannot be changed.</span>
+                </div>
+                <button
+                  className="btn btn-primary"
+                  style={{ borderRadius: '6px', padding: '10px 20px', fontWeight: 600 }}
+                  disabled={savingProfile}
+                  onClick={() => void handleSaveProfile()}
+                >
+                  {savingProfile ? 'Saving Changes…' : 'Save Changes'}
                 </button>
               </div>
-            </div>
+            )}
 
-            <div className="form-group">
-              <label className="form-label">First name</label>
-              <input className="form-input" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Last name</label>
-              <input className="form-input" value={lastName} onChange={(e) => setLastName(e.target.value)} />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Email</label>
-              <input className="form-input" value={user?.email ?? ''} disabled style={{ background: 'var(--bg-subtle)', color: 'var(--text-muted)' }} />
-              <span className="form-hint">Email cannot be changed.</span>
-            </div>
-            <button className="btn btn-primary" disabled={savingProfile} onClick={() => void handleSaveProfile()}>
-              {savingProfile ? 'Saving…' : 'Save Profile'}
-            </button>
-          </div>
-        </div>
-
-        {/* Password */}
-        <div className="card">
-          <div className="card-header"><span className="card-title">Change Password</span></div>
-          <div className="card-body">
-            <div className="form-group">
-              <label className="form-label">Current password</label>
-              <input type="password" className="form-input" value={currentPw} onChange={(e) => setCurrentPw(e.target.value)} placeholder="••••••••" />
-            </div>
-            <div className="form-group">
-              <label className="form-label">New password</label>
-              <input type="password" className="form-input" value={newPw} onChange={(e) => setNewPw(e.target.value)} placeholder="Min 8 characters" />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Confirm new password</label>
-              <input type="password" className="form-input" value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)} placeholder="Re-enter new password" />
-            </div>
-            <button className="btn btn-primary" disabled={changingPw || !currentPw || !newPw || !confirmPw} onClick={() => void handleChangePassword()}>
-              {changingPw ? 'Saving…' : 'Change Password'}
-            </button>
-          </div>
-        </div>
-
-        {/* Addresses */}
-        <div className="card" style={{ gridColumn: '1 / -1' }}>
-          <div className="card-header">
-            <span className="card-title">Saved Addresses</span>
-            <button className="btn btn-secondary btn-sm" onClick={openNewAddr}>
-              <i className="fa-solid fa-plus"></i> Add Address
-            </button>
-          </div>
-          <div className="card-body">
-            {loadingAddr && <span className="spinner"></span>}
-            {!loadingAddr && addresses.length === 0 && (
-              <div className="empty-state" style={{ padding: '24px' }}>
-                <p>No saved addresses.</p>
+            {/* Tab: Security & Password */}
+            {activeTab === 'security' && (
+              <div className="shadow-tinted" style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 24 }}>
+                <h2 style={{ fontFamily: 'Sora, sans-serif', fontSize: '1.4rem', fontWeight: 800, marginBottom: 20 }}>
+                  Update Password
+                </h2>
+                
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600 }}>Current Password</label>
+                  <input type="password" className="form-input" style={{ borderRadius: '6px' }} value={currentPw} onChange={(e) => setCurrentPw(e.target.value)} placeholder="••••••••" />
+                </div>
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600 }}>New Password</label>
+                  <input type="password" className="form-input" style={{ borderRadius: '6px' }} value={newPw} onChange={(e) => setNewPw(e.target.value)} placeholder="At least 8 characters" />
+                </div>
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600 }}>Confirm New Password</label>
+                  <input type="password" className="form-input" style={{ borderRadius: '6px' }} value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)} placeholder="Re-enter new password" />
+                </div>
+                
+                {/* Active styled Change Password button (Form validated inside function instead of disabled) */}
+                <button
+                  className="btn btn-primary"
+                  style={{
+                    borderRadius: '6px',
+                    padding: '10px 20px',
+                    fontWeight: 600,
+                    opacity: changingPw ? 0.7 : 1,
+                    cursor: changingPw ? 'not-allowed' : 'pointer'
+                  }}
+                  disabled={changingPw}
+                  onClick={() => void handleChangePassword()}
+                >
+                  {changingPw ? 'Updating…' : 'Update Password'}
+                </button>
               </div>
             )}
-            {!loadingAddr && addresses.length > 0 && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px' }}>
-                {addresses.map((addr) => (
-                  <div key={addr.id} style={{ border: `1px solid ${addr.isDefault ? 'var(--primary)' : 'var(--border)'}`, padding: '12px', background: addr.isDefault ? 'var(--primary-light)' : 'var(--bg-surface)' }}>
-                    {addr.label && <div style={{ fontWeight: 600, marginBottom: 4, fontSize: '0.875rem' }}>{addr.label}</div>}
-                    <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
-                      {addr.street}<br />{addr.city}, {addr.state} {addr.zipCode}<br />{addr.country}
+
+            {/* Tab: Saved Addresses */}
+            {activeTab === 'addresses' && (
+              <div className="shadow-tinted" style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 24 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                  <h2 style={{ fontFamily: 'Sora, sans-serif', fontSize: '1.4rem', fontWeight: 800, margin: 0 }}>
+                    My Saved Addresses
+                  </h2>
+                  <button className="btn btn-secondary" style={{ padding: '8px 16px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }} onClick={openNewAddr}>
+                    + Add New Address
+                  </button>
+                </div>
+
+                <div>
+                  {loadingAddr && <span className="spinner"></span>}
+                  {!loadingAddr && addresses.length === 0 && (
+                    <div className="empty-state" style={{ padding: '40px 20px', textAlign: 'center' }}>
+                      <div style={{ fontSize: '2rem', marginBottom: 8 }}>📍</div>
+                      <p style={{ color: 'var(--text-secondary)' }}>You haven't saved any addresses yet.</p>
                     </div>
-                    {addr.isDefault && <span className="badge badge-info" style={{ marginTop: 6 }}>Default</span>}
-                    <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
-                      <button className="btn btn-secondary btn-sm" onClick={() => openEditAddr(addr)}><i className="fa-solid fa-pen"></i></button>
-                      {!addr.isDefault && (
-                        <button className="btn btn-secondary btn-sm" onClick={() => void handleSetDefault(addr.id)}>Set Default</button>
-                      )}
-                      <button className="btn btn-danger btn-sm" onClick={() => void handleDeleteAddr(addr.id)}><i className="fa-solid fa-trash"></i></button>
+                  )}
+                  {!loadingAddr && addresses.length > 0 && (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' }}>
+                      {addresses.map((addr) => {
+                        return (
+                          /* Calm Address Card (No red/pink error borders or bg highlights!) */
+                          <div
+                            key={addr.id}
+                            style={{
+                              border: `1.5px solid ${addr.isDefault ? '#0D9488' : 'var(--border)'}`,
+                              padding: '16px',
+                              background: addr.isDefault ? '#F0FDFA' : '#FAF9F6',
+                              borderRadius: '8px',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              justifyContent: 'space-between',
+                              height: '100%',
+                              position: 'relative'
+                            }}
+                          >
+                            <div>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                                <span style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                                  {addr.label || 'Address'}
+                                </span>
+                                {addr.isDefault && (
+                                  <span className="badge badge-info" style={{ backgroundColor: '#0D9488', color: '#fff', fontSize: '0.65rem', padding: '2px 8px', borderRadius: '4px' }}>
+                                    Default
+                                  </span>
+                                )}
+                              </div>
+                              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+                                {addr.line1}<br />
+                                {addr.city}, {addr.state} {addr.postalCode}<br />
+                                {addr.country}
+                              </div>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: 8, marginTop: 16, borderTop: '1px solid rgba(0,0,0,0.05)', paddingTop: 12 }}>
+                              <button
+                                className="btn btn-secondary btn-sm"
+                                style={{ borderRadius: '4px', fontSize: '0.75rem', padding: '4px 10px' }}
+                                onClick={() => openEditAddr(addr)}
+                              >
+                                Edit
+                              </button>
+                              {!addr.isDefault && (
+                                <button
+                                  className="btn btn-secondary btn-sm"
+                                  style={{ borderRadius: '4px', fontSize: '0.75rem', padding: '4px 10px' }}
+                                  onClick={() => void handleSetDefault(addr.id)}
+                                >
+                                  Set Default
+                                </button>
+                              )}
+                              <button
+                                className="btn btn-danger btn-sm"
+                                style={{ borderRadius: '4px', fontSize: '0.75rem', padding: '4px 10px' }}
+                                onClick={() => void handleDeleteAddr(addr.id)}
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </div>
+                        )
+                      })}
                     </div>
-                  </div>
-                ))}
+                  )}
+                </div>
               </div>
             )}
+
           </div>
         </div>
       </div>
@@ -255,15 +456,15 @@ export function AccountPage() {
         >
           {[
             { key: 'label', label: 'Label (optional)', placeholder: 'Home, Work…' },
-            { key: 'street', label: 'Street', placeholder: '123 Main St' },
+            { key: 'line1', label: 'Street Address', placeholder: '123 Main St' },
             { key: 'city', label: 'City', placeholder: 'Mumbai' },
             { key: 'state', label: 'State', placeholder: 'Maharashtra' },
-            { key: 'zipCode', label: 'ZIP Code', placeholder: '400001' },
+            { key: 'postalCode', label: 'ZIP / Postal Code', placeholder: '400001' },
             { key: 'country', label: 'Country', placeholder: 'India' },
           ].map((f) => (
             <div className="form-group" key={f.key}>
-              <label className="form-label">{f.label}</label>
-              <input className="form-input" placeholder={f.placeholder} value={(addrForm as Record<string, string>)[f.key] ?? ''} onChange={(e) => setAddrForm((p) => ({ ...p, [f.key]: e.target.value }))} />
+              <label className="form-label" style={{ fontWeight: 600 }}>{f.label}</label>
+              <input className="form-input" style={{ borderRadius: '6px' }} placeholder={f.placeholder} value={(addrForm as any)[f.key] ?? ''} onChange={(e) => setAddrForm((p) => ({ ...p, [f.key]: e.target.value }))} />
             </div>
           ))}
         </Modal>

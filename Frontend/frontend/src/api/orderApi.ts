@@ -65,9 +65,7 @@ export const orderApi = {
     if (photos) {
       photos.forEach((p) => form.append('photos', p))
     }
-    return api.post<DamageReportResponse>(`/api/orders/${id}/damage-report`, form, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+    return api.post<DamageReportResponse>(`/api/orders/${id}/damage-report`, form)
   },
 
   // Schedule views
@@ -79,4 +77,10 @@ export const orderApi = {
 
   downloadInvoice: (invoiceId: string) =>
     api.get<Blob>(`/api/invoices/${invoiceId}/download`, { responseType: 'blob' }),
+
+  receiveOfflinePayment: (id: string) =>
+    api.post<void>(`/api/orders/${id}/offline-payment`),
+
+  verifyPaymentMock: (id: string) =>
+    api.post<void>(`/api/orders/${id}/verify-mock`),
 }

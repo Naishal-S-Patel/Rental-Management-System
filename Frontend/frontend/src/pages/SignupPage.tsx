@@ -49,8 +49,8 @@ export function SignupPage() {
     <div className="auth-page">
       <div className="auth-card" style={{ maxWidth: 440 }}>
         <div style={{ marginBottom: '24px' }}>
-          <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>
-            RentHub
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary)', marginBottom: '4px', letterSpacing: '-0.03em' }}>
+            ◆ RentLo
           </div>
           <h1 className="auth-title" style={{ fontSize: '1.125rem', marginBottom: 0 }}>
             Create an account

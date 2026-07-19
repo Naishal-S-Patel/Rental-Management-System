@@ -2,13 +2,14 @@
 
 export interface DashboardSummaryResponse {
   activeRentals: number
-  dueToday: number
+  rentalsDueToday: number
   upcomingPickups: number
   upcomingReturns: number
-  overdueCount: number
-  totalRevenue: number
+  overdueRentals: number
+  revenue: number
   depositsHeld: number
-  lateFeesCollected: number
+  lateFeeCollection: number
+  damagedRentals: number
 }
 
 export interface OverdueOrderResponse {
@@ -23,18 +24,18 @@ export interface OverdueOrderResponse {
 }
 
 export interface RentalSettingsResponse {
-  id: string
   gracePeriodDays: number
-  dailyLateFeePercent: number
-  maxLateFeeMutiplier: number
-  pickupWindowHours: number
-  returnWindowHours: number
+  dailyLateFeePercentage: number
+  maxLateFeeMultiplier: number
+  defaultPickupWindowDays: number
+  defaultReturnWindowDays: number
+  updatedAt?: string
 }
 
 export interface RentalSettingsRequest {
   gracePeriodDays: number
-  dailyLateFeePercent: number
-  maxLateFeeMutiplier: number
-  pickupWindowHours: number
-  returnWindowHours: number
+  dailyLateFeePercentage: number
+  maxLateFeeMultiplier: number
+  defaultPickupWindowDays: number
+  defaultReturnWindowDays: number
 }

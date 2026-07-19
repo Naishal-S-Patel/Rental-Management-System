@@ -46,22 +46,12 @@ export function CustomerOrdersPage() {
       </div>
 
       {/* Status tabs */}
-      <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', marginBottom: '16px', gap: 0, overflowX: 'auto' }}>
+      <div className="o-notebook-tabs">
         {STATUS_TABS.map((t) => (
           <button
             key={t.value}
+            className={`o-notebook-tab ${statusFilter === t.value ? 'active' : ''}`}
             onClick={() => { setStatusFilter(t.value); setPage(0) }}
-            style={{
-              padding: '8px 14px',
-              fontSize: '0.8125rem',
-              fontWeight: statusFilter === t.value ? 600 : 400,
-              border: 'none',
-              borderBottom: `2px solid ${statusFilter === t.value ? 'var(--primary)' : 'transparent'}`,
-              background: 'none',
-              color: statusFilter === t.value ? 'var(--primary)' : 'var(--text-secondary)',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-            }}
           >
             {t.label}
           </button>
@@ -73,7 +63,6 @@ export function CustomerOrdersPage() {
 
       {!loading && orders.length === 0 && (
         <div className="empty-state">
-          <i className="fa-solid fa-receipt"></i>
           <p>No orders found.</p>
           <Link to="/products" className="btn btn-primary" style={{ marginTop: 16 }}>Browse Products</Link>
         </div>
@@ -96,11 +85,11 @@ export function CustomerOrdersPage() {
               <tbody>
                 {orders.map((order) => (
                   <tr key={order.id}>
-                    <td style={{ fontWeight: 600 }}>#{order.orderNumber}</td>
+                    <td style={{ fontWeight: 600 }}>#{order.id.slice(0, 8)}</td>
                     <td style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>{order.storeName ?? '—'}</td>
                     <td style={{ fontSize: '0.8125rem' }}>{formatDate(order.createdAt)}</td>
                     <td><OrderStatusBadge status={order.status} /></td>
-                    <td style={{ fontWeight: 600 }}>{formatCurrency(order.total)}</td>
+                    <td style={{ fontWeight: 600 }}>{formatCurrency(order.totalAmount)}</td>
                     <td>
                       <button className="btn btn-secondary btn-sm" onClick={() => navigate(`/orders/${order.id}`)}>
                         View
